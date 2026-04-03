@@ -306,6 +306,6 @@
   </ItemGroup>
   
   <ItemGroup>
-    <Folder Include="patches\balance\" />
+    <Folder Include="patches\statchange\" />
   </ItemGroup>
 </Project>
