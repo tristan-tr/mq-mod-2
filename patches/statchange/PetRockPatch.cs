@@ -2,12 +2,11 @@
 
 namespace mq_mod_2.patches.statchange;
 
-[HarmonyPatch(typeof(PetRockObject), MethodType.Constructor)]
+[HarmonyPatch(typeof(PetRockObject), nameof(PetRockObject.Init))]
 public class PetRockPatch
 {
-    static void Postfix(ref float ___POWER)
+    static void Prefix(ref float velocity)
     {
-        ___POWER = 30f;
+        velocity *= 1.2f;
     }
-
 }
