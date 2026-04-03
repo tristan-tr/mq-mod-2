@@ -1,8 +1,5 @@
 ﻿This is a mod for a Unity Mono game called MageQuit.
-
 This uses BepInEx to inject, and Harmony to patch the game.
-
-After implementing a patch, you should compile the application to verify its correctness.
 
 # About the game
 
@@ -42,6 +39,16 @@ WAYS TO PLAY MAGEQUIT
 
     Play online with multiple players on the same PC 
 
-# Source code
+# Documentation
 
-The game's source code can be found in `./decompiled`. You should use this to guide your patches.
+Harmony documentation can be found in `./docs/harmony`.
+The game's source code can be found in `./decompiled`. 
+
+
+# Guidelines
+
+Use the game's source code (`./decompiled`) to guide your patches.
+
+Before implementing a patch, consult relevant articles in the Harmony documentation (`./docs/harmony`).
+
+After implementing a patch, you should compile the application to verify its correctness.

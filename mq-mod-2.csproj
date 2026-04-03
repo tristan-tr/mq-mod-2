@@ -293,15 +293,18 @@
   <ItemGroup>
     <Compile Remove="decompiled\**" />
     <Compile Remove="libs\**" />
+    <Compile Remove="docs\**" />
   </ItemGroup>
   
   <ItemGroup>
     <EmbeddedResource Remove="decompiled\**" />
     <EmbeddedResource Remove="libs\**" />
+    <EmbeddedResource Remove="docs\**" />
   </ItemGroup>
   
   <ItemGroup>
     <None Remove="decompiled\**" />
     <None Remove="libs\**" />
+    <None Remove="docs\**" />
   </ItemGroup>
 </Project>
