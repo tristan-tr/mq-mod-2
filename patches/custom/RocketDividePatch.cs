@@ -3,7 +3,7 @@ using DG.Tweening;
 using HarmonyLib;
 using UnityEngine;
 
-namespace mq_mod_2.patches.balance;
+namespace mq_mod_2.patches.custom;
 
 [HarmonyPatch(typeof(RocketObject), "rpcCollision")]
 public class RocketDividePatch
