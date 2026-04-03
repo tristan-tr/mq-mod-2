@@ -2,6 +2,8 @@
 
 This uses BepInEx to inject, and Harmony to patch the game.
 
+After implementing a patch, you should compile the application to verify its correctness.
+
 # About the game
 
 A wizard brawler about spell drafting and beard envy, MageQuit allows up to 10 mages to battle online or locally. Beards grow longer with each kill; the wizard with the longest beard after 9 rounds wins!
