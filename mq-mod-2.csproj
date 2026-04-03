@@ -304,8 +304,4 @@
     <None Remove="decompiled\**" />
     <None Remove="libs\**" />
   </ItemGroup>
-  
-  <ItemGroup>
-    <Folder Include="patches\statchange\" />
-  </ItemGroup>
 </Project>
