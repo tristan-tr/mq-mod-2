@@ -5,6 +5,8 @@ using UnityEngine;
 
 namespace mq_mod_2.patches.custom;
 
+// ai slop, sorry
+
 [HarmonyPatch(typeof(RocketObject), "rpcCollision")]
 public class RocketDividePatch
 {
