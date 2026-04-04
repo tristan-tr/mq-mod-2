@@ -10,6 +10,8 @@ public class RocketDividePatch
 {
     static void Postfix(RocketObject __instance)
     {
+        var alreadyHit = Traverse.Create(__instance).Field("alreadyHit").GetValue<List<GameObject>>();
+
         if (Globals.online)
         {
             if (__instance.photonView.isMine)
@@ -19,8 +21,14 @@ public class RocketDividePatch
                 {
                     Identity identity = wizard.GetComponent<Identity>();
                     Quaternion rotation = __instance.transform.rotation * Quaternion.Euler(0f, 45f, 0f);
-                    GameObject gameObject = GameUtility.Instantiate("Objects/Rocket", __instance.transform.position, rotation, 0);
-                    gameObject.GetComponent<RocketObject>().Init(identity, __instance.curve, __instance.velocity);
+                    Vector3 position = __instance.transform.position + rotation * Vector3.forward * 0.5f;
+                    GameObject gameObject = GameUtility.Instantiate("Objects/Rocket", position, rotation, 0);
+                    RocketObject newRocket = gameObject.GetComponent<RocketObject>();
+                    newRocket.Init(identity, __instance.curve, __instance.velocity);
+
+                    var newAlreadyHit = Traverse.Create(newRocket).Field("alreadyHit").GetValue<List<GameObject>>();
+                    newAlreadyHit.Clear();
+                    newAlreadyHit.AddRange(alreadyHit);
                 }
             }
             __instance.transform.Rotate(Vector3.up, -45f);
@@ -30,6 +38,11 @@ public class RocketDividePatch
             RocketObject rocketObject = Object.Instantiate<RocketObject>(__instance);
             __instance.transform.Rotate(Vector3.up, -45f);
             rocketObject.transform.Rotate(Vector3.up, 45f);
+            rocketObject.transform.position += rocketObject.transform.forward * 0.5f;
+
+            var newAlreadyHit = Traverse.Create(rocketObject).Field("alreadyHit").GetValue<List<GameObject>>();
+            newAlreadyHit.Clear();
+            newAlreadyHit.AddRange(alreadyHit);
         }
     }
 }
