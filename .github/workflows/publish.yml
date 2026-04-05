@@ -21,10 +21,10 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '6.0.x' # Or the version you use locally
+        dotnet-version: '6.0.x'
         source-url: https://nuget.pkg.github.com/tristan-tr/index.json
       env:
-        NODE_AUTH_TOKEN: ${{ secrets.LIBS_REPO_TOKEN }} # Assuming this token works for GPR
+        NUGET_AUTH_TOKEN: ${{ secrets.LIBS_REPO_TOKEN }}
 
     - name: Restore dependencies
       run: dotnet restore
