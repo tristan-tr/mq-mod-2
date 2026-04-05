@@ -18,33 +18,43 @@ public class RocketDividePatch
         {
             if (__instance.photonView.isMine)
             {
-                WizardController wizard = GameUtility.GetWizard(__instance.GetComponent<Identity>().owner);
-                if (wizard != null)
-                {
-                    Identity identity = wizard.GetComponent<Identity>();
-                    Quaternion rotation = __instance.transform.rotation * Quaternion.Euler(0f, 45f, 0f);
-                    Vector3 position = __instance.transform.position + rotation * Vector3.forward * 0.5f;
-                    GameObject gameObject = GameUtility.Instantiate("Objects/Rocket", position, rotation, 0);
-                    RocketObject newRocket = gameObject.GetComponent<RocketObject>();
-                    newRocket.Init(identity, __instance.curve, __instance.velocity);
-
-                    var newAlreadyHit = Traverse.Create(newRocket).Field("alreadyHit").GetValue<List<GameObject>>();
-                    newAlreadyHit.Clear();
-                    newAlreadyHit.AddRange(alreadyHit);
-                }
+                SpawnRocket(__instance, alreadyHit, 45f);
+                SpawnRocket(__instance, alreadyHit, -45f);
             }
-            __instance.transform.Rotate(Vector3.up, -45f);
         }
         else
         {
-            RocketObject rocketObject = Object.Instantiate<RocketObject>(__instance);
-            __instance.transform.Rotate(Vector3.up, -45f);
-            rocketObject.transform.Rotate(Vector3.up, 45f);
-            rocketObject.transform.position += rocketObject.transform.forward * 0.5f;
+            SpawnRocketOffline(__instance, alreadyHit, 45f);
+            SpawnRocketOffline(__instance, alreadyHit, -45f);
+        }
+    }
 
-            var newAlreadyHit = Traverse.Create(rocketObject).Field("alreadyHit").GetValue<List<GameObject>>();
+    private static void SpawnRocket(RocketObject original, List<GameObject> alreadyHit, float angle)
+    {
+        WizardController wizard = GameUtility.GetWizard(original.GetComponent<Identity>().owner);
+        if (wizard != null)
+        {
+            Identity identity = wizard.GetComponent<Identity>();
+            Quaternion rotation = original.transform.rotation * Quaternion.Euler(0f, angle, 0f);
+            Vector3 position = original.transform.position + rotation * Vector3.forward * 0.5f;
+            GameObject gameObject = GameUtility.Instantiate("Objects/Rocket", position, rotation, 0);
+            RocketObject newRocket = gameObject.GetComponent<RocketObject>();
+            newRocket.Init(identity, original.curve, original.velocity);
+
+            var newAlreadyHit = Traverse.Create(newRocket).Field("alreadyHit").GetValue<List<GameObject>>();
             newAlreadyHit.Clear();
             newAlreadyHit.AddRange(alreadyHit);
         }
+    }
+
+    private static void SpawnRocketOffline(RocketObject original, List<GameObject> alreadyHit, float angle)
+    {
+        RocketObject rocketObject = Object.Instantiate<RocketObject>(original);
+        rocketObject.transform.Rotate(Vector3.up, angle);
+        rocketObject.transform.position += rocketObject.transform.forward * 0.5f;
+
+        // Ensure it has its own list and copy items to avoid shared reference issues
+        List<GameObject> newAlreadyHitList = new List<GameObject>(alreadyHit);
+        Traverse.Create(rocketObject).Field("alreadyHit").SetValue(newAlreadyHitList);
     }
 }
