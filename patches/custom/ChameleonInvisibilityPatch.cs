@@ -1,4 +1,6 @@
-﻿using System.Linq;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection.Emit;
 using DG.Tweening;
 using HarmonyLib;
 using UnityEngine;
@@ -7,22 +9,11 @@ namespace mq_mod_2.patches.custom;
 
 /**
  * Makes your wizard transparent to yourself, and invisible to everyone else when playing online mode and hitting chameleon.
+ * Patches ChameleonObject to use custom hide logic.
  */
+[HarmonyPatch]
 public class ChameleonInvisibilityPatch
 {
-    static bool HasHitChameleon(WizardStatus wizardStatus)
-    {
-        int ownerId = wizardStatus.GetComponent<Identity>().owner;
-
-        // Check if the owner has any Chameleon entries
-        if (Globals.spell_manager.currentChameleon.TryGetValue(ownerId, out var chameleonDict))
-        {
-            return chameleonDict.ContainsKey(SpellName.Chameleon);
-        }
-
-        return false;
-    }
-
     // should not be true for clones since default chameleon behaviour does not turn clones invis
     static bool IsLocalPlayer(WizardStatus wizardStatus)
     {
@@ -44,71 +35,118 @@ public class ChameleonInvisibilityPatch
         return false;
     }
 
-    static bool IsPatchActive(WizardStatus wizardStatus)
-    {
-        return Globals.online && IsLocalPlayer(wizardStatus) && HasHitChameleon(wizardStatus);
-    }
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<Material, Shader> _originalShaders = new();
 
-    static float GetAlpha(bool hide)
+    public static void CustomHideWizard(WizardStatus instance, bool hide)
     {
-        return hide ? 0.5f : 1.0f;
-    }
-    
-    [HarmonyPatch(typeof(WizardStatus), nameof(WizardStatus.HideWizard))]
-    class HideWizardPatch
-    {
-        static bool Prefix(ref bool hide, WizardStatus __instance)
+        if (Globals.online && IsLocalPlayer(instance))
         {
-            if (IsPatchActive(__instance))
+            Renderer[] array = instance.materialColors.Keys.ToArray();
+            foreach (var renderer in array)
             {
-                // Make transparent/untransparent instead
-                if (hide)
-                {
-                    Renderer[] array = __instance.materialColors.Keys.ToArray();
-                    foreach (var renderer in array)
-                    {
-                        if(renderer == null) continue;
+                if (renderer == null) continue;
 
-                        foreach (var mat in renderer.materials)
+                foreach (var mat in renderer.materials)
+                {
+                    mat.DOKill();
+                    if (hide)
+                    {
+                        if (!_originalShaders.TryGetValue(mat, out _))
                         {
-                            mat.shader = Shader.Find("Standard");
+                            _originalShaders.Add(mat, mat.shader);
+                        }
+
+                        mat.shader = Shader.Find("Standard");
+
+                        mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+                        mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+                        mat.SetInt("_ZWrite", 0);
+                        mat.DisableKeyword("_ALPHATEST_ON");
+                        mat.EnableKeyword("_ALPHABLEND_ON");
+                        mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+                        mat.renderQueue = 3000;
+
+                        mat.DOFade(0.5f, 0.5f);
+                    }
+                    else
+                    {
+                        if (_originalShaders.TryGetValue(mat, out var originalShader))
+                        {
+                            mat.shader = originalShader;
                             
-                            mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-                            mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-                            mat.SetInt("_ZWrite", 0);
-                            mat.DisableKeyword("_ALPHATEST_ON");
-                            mat.EnableKeyword("_ALPHABLEND_ON");
-                            mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
-                            mat.renderQueue = 3000;
-                            
-                            mat.DOFade(GetAlpha(hide), 0.5f);
+                            // If the original was Standard, we need to manually reset blend modes
+                            if (originalShader.name == "Standard")
+                            {
+                                mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
+                                mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.Zero);
+                                mat.SetInt("_ZWrite", 1);
+                                mat.DisableKeyword("_ALPHATEST_ON");
+                                mat.DisableKeyword("_ALPHABLEND_ON");
+                                mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+                                mat.renderQueue = -1;
+                            }
                         }
                     }
                 }
-                else
-                {
-                    __instance.ResetMaterials(0.5f);
-                }
-
-                return !hide; // skip making invisible, otherwise run
             }
 
-            return true; // dont skip
+            if (!hide)
+            {
+                instance.ResetMaterials(0.5f);
+                instance.HideWizard(false);
+            }
+        }
+        else
+        {
+            instance.HideWizard(hide);
         }
     }
 
-    [HarmonyPatch(typeof(WizardStatus), nameof(WizardStatus.HideStatusBar))]
-    class HideStatusBarPatch
+    public static void CustomHideStatusBar(WizardStatus instance, bool hide)
     {
-        static bool Prefix(ref bool hide, WizardStatus __instance)
+        if (Globals.online && IsLocalPlayer(instance) && hide)
         {
-            if (IsPatchActive(__instance))
+            return; // skip hiding
+        }
+        instance.HideStatusBar(hide);
+    }
+
+    [HarmonyPatch(typeof(ChameleonObject), "rpcCopy")]
+    [HarmonyTranspiler]
+    static IEnumerable<CodeInstruction> TranspileRpcCopy(IEnumerable<CodeInstruction> instructions)
+    {
+        return ReplaceHideCalls(instructions);
+    }
+
+    [HarmonyPatch(typeof(ChameleonObject), "OnDestroy")]
+    [HarmonyTranspiler]
+    static IEnumerable<CodeInstruction> TranspileOnDestroy(IEnumerable<CodeInstruction> instructions)
+    {
+        return ReplaceHideCalls(instructions);
+    }
+
+    static IEnumerable<CodeInstruction> ReplaceHideCalls(IEnumerable<CodeInstruction> instructions)
+    {
+        var hideWizardMethod = AccessTools.Method(typeof(WizardStatus), nameof(WizardStatus.HideWizard));
+        var customHideWizardMethod = AccessTools.Method(typeof(ChameleonInvisibilityPatch), nameof(CustomHideWizard));
+        
+        var hideStatusBarMethod = AccessTools.Method(typeof(WizardStatus), nameof(WizardStatus.HideStatusBar));
+        var customHideStatusBarMethod = AccessTools.Method(typeof(ChameleonInvisibilityPatch), nameof(CustomHideStatusBar));
+
+        foreach (var instruction in instructions)
+        {
+            if (instruction.Calls(hideWizardMethod))
             {
-                // never hide status bar
-                return !hide; // skip making invisible, otherwise run
+                yield return new CodeInstruction(OpCodes.Call, customHideWizardMethod);
             }
-            
-            return true; // dont skip
+            else if (instruction.Calls(hideStatusBarMethod))
+            {
+                yield return new CodeInstruction(OpCodes.Call, customHideStatusBarMethod);
+            }
+            else
+            {
+                yield return instruction;
+            }
         }
     }
 }
