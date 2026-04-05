@@ -8,3 +8,5 @@ libs
 obj
 
 docs
+
+nuget.config
