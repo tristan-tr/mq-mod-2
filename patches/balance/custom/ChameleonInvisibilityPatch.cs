@@ -5,7 +5,7 @@ using DG.Tweening;
 using HarmonyLib;
 using UnityEngine;
 
-namespace mq_mod_2.patches.custom;
+namespace mq_mod_2.patches.balance.custom;
 
 /**
  * Makes your wizard transparent to yourself, and invisible to everyone else when playing online mode and hitting chameleon.

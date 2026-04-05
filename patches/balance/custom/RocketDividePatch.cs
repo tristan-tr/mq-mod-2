@@ -1,9 +1,8 @@
 using System.Collections.Generic;
-using DG.Tweening;
 using HarmonyLib;
 using UnityEngine;
 
-namespace mq_mod_2.patches.custom;
+namespace mq_mod_2.patches.balance.custom;
 
 // ai slop, sorry
 

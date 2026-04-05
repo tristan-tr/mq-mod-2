@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Reflection.Emit;
 using HarmonyLib;
 
-namespace mq_mod_2.patches.statchange;
+namespace mq_mod_2.patches.balance.statchange;
 
 [HarmonyPatch(typeof(VanguardObject), "rpcCollision")]
 public static class VanguardPatch
