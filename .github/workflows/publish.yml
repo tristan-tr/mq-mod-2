@@ -52,6 +52,6 @@ jobs:
         name: Latest Build
         files: bin/Release/net46/mq_mod_2.dll
         generate_release_notes: true
-        prerelease: true
+        prerelease: false
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
