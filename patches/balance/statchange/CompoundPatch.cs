@@ -4,7 +4,7 @@ using System.Reflection.Emit;
 using HarmonyLib;
 using UnityEngine;
 
-namespace mq_mod_2.patches.balance.custom;
+namespace mq_mod_2.patches.balance.statchange;
 
 [HarmonyPatch]
 public static class CompoundPatch
