@@ -9,22 +9,23 @@ namespace mq_mod_2.patches.balance.custom;
 [HarmonyPatch(typeof(RocketObject), "rpcCollision")]
 public class RocketDividePatch
 {
-    static void Postfix(RocketObject __instance)
-    {
-        var alreadyHit = Traverse.Create(__instance).Field("alreadyHit").GetValue<List<GameObject>>();
+    private static readonly AccessTools.FieldRef<RocketObject, List<GameObject>> AlreadyHitRef =
+        AccessTools.FieldRefAccess<RocketObject, List<GameObject>>("alreadyHit");
 
+    static void Postfix(RocketObject __instance, List<GameObject> ___alreadyHit)
+    {
         if (Globals.online)
         {
             if (__instance.photonView.isMine)
             {
-                SpawnRocket(__instance, alreadyHit, 45f);
-                SpawnRocket(__instance, alreadyHit, -45f);
+                SpawnRocket(__instance, ___alreadyHit, 45f);
+                SpawnRocket(__instance, ___alreadyHit, -45f);
             }
         }
         else
         {
-            SpawnRocketOffline(__instance, alreadyHit, 45f);
-            SpawnRocketOffline(__instance, alreadyHit, -45f);
+            SpawnRocketOffline(__instance, ___alreadyHit, 45f);
+            SpawnRocketOffline(__instance, ___alreadyHit, -45f);
         }
     }
 
@@ -40,7 +41,7 @@ public class RocketDividePatch
             RocketObject newRocket = gameObject.GetComponent<RocketObject>();
             newRocket.Init(identity, original.curve, original.velocity);
 
-            var newAlreadyHit = Traverse.Create(newRocket).Field("alreadyHit").GetValue<List<GameObject>>();
+            List<GameObject> newAlreadyHit = AlreadyHitRef(newRocket);
             newAlreadyHit.Clear();
             newAlreadyHit.AddRange(alreadyHit);
         }
@@ -53,7 +54,6 @@ public class RocketDividePatch
         rocketObject.transform.position += rocketObject.transform.forward * 0.5f;
 
         // Ensure it has its own list and copy items to avoid shared reference issues
-        List<GameObject> newAlreadyHitList = new List<GameObject>(alreadyHit);
-        Traverse.Create(rocketObject).Field("alreadyHit").SetValue(newAlreadyHitList);
+        AlreadyHitRef(rocketObject) = new List<GameObject>(alreadyHit);
     }
 }

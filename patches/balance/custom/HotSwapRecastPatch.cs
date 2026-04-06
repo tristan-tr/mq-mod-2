@@ -6,9 +6,6 @@ using UnityEngine;
 [HarmonyPatch(typeof(HotSwapObject))]
 public static class HotSwapRecastPatch
 {
-    // These fields are private in HotSwapObject, so we use Traverse.
-    // However, for better performance and readability, we'll use a helper.
-
     [HarmonyPrefix]
     [HarmonyPatch("Teleport")]
     public static bool TeleportPrefix(HotSwapObject __instance)
@@ -25,21 +22,20 @@ public static class HotSwapRecastPatch
 
     [HarmonyPostfix]
     [HarmonyPatch("localCollision")]
-    public static void LocalCollisionPostfix(HotSwapObject __instance, GameObject go)
+    public static void LocalCollisionPostfix(HotSwapObject __instance, GameObject go, PhysicsBody ___phys)
     {
         // Ensure state and isKinematic are set even if go is null (ground hit)
         __instance.state = HotSwapObject.HotSwapState.AttachedToObject;
         
-        var phys = Traverse.Create(__instance).Field("phys").GetValue<PhysicsBody>();
-        if (phys != null && phys.rig != null)
+        if (___phys != null && ___phys.rig != null)
         {
-            phys.rig.isKinematic = true;
+            ___phys.rig.isKinematic = true;
         }
     }
 
     [HarmonyPrefix]
     [HarmonyPatch("FixedUpdate")]
-    public static void FixedUpdatePrefix(HotSwapObject __instance, out bool __state)
+    public static void FixedUpdatePrefix(HotSwapObject __instance, out bool __state, Transform ___target, UnitStatus ___enemyStatus)
     {
         __state = false;
         // If we hit the ground and are waiting for recast, state is AttachedToObject and target is null.
@@ -47,11 +43,7 @@ public static class HotSwapRecastPatch
         // We temporarily change the state to skip that logic.
         if (__instance.state == HotSwapObject.HotSwapState.AttachedToObject)
         {
-            var tr = Traverse.Create(__instance);
-            var target = tr.Field("target").GetValue<Transform>();
-            var enemyStatus = tr.Field("enemyStatus").GetValue<UnitStatus>();
-            
-            if (target == null && enemyStatus == null)
+            if (___target == null && ___enemyStatus == null)
             {
                 __instance.state = HotSwapObject.HotSwapState.TeleportImmediately; // Switch is skip-only for this state
                 __state = true;
@@ -71,16 +63,12 @@ public static class HotSwapRecastPatch
 
     [HarmonyPrefix]
     [HarmonyPatch("Swap")]
-    public static bool SwapPrefix(HotSwapObject __instance, float force)
+    public static bool SwapPrefix(HotSwapObject __instance, float force, Transform ___target, UnitStatus ___enemyStatus)
     {
-        var tr = Traverse.Create(__instance);
-        var target = tr.Field("target").GetValue<Transform>();
-        var enemyStatus = tr.Field("enemyStatus").GetValue<UnitStatus>();
-
         // If we recast and there's no target, we perform the teleport.
-        if (target == null)
+        if (___target == null)
         {
-            if (enemyStatus == null) // Ground hit
+            if (___enemyStatus == null) // Ground hit
             {
                 __instance.Teleport();
             }
