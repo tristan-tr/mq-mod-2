@@ -54,3 +54,10 @@ Before implementing a patch, consult relevant articles in the Harmony documentat
 After implementing a patch, you should compile the application to verify its correctness.
 
 Consider that patches should work for online mode, as well as offline mode.
+
+# Harmony tricks
+
+Avoid using Traverse if possible:
+- Each patch method (except a transpiler) can get all the arguments of the original method as well as the instance if the original method is not static and the return value.
+- You only need to define the parameters you want to access.  
+- See `docs/harmony/patching-injections.md` for details.
