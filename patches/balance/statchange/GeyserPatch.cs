@@ -2,10 +2,10 @@
 
 namespace mq_mod_2.patches.balance.statchange;
 
-[HarmonyPatch(typeof(GeyserObject), MethodType.Constructor)]
+[HarmonyPatch(typeof(GeyserObject), nameof(GeyserObject.Init))]
 public class GeyserPatch
 {
-    static void Postfix(GeyserObject __instance, ref float ___RADIUS)
+    static void Prefix(ref float ___RADIUS)
     {
         ___RADIUS = 7f;
     }
