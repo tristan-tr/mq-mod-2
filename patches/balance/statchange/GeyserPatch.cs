@@ -7,6 +7,6 @@ public class GeyserPatch
 {
     static void Postfix(GeyserObject __instance, ref float ___RADIUS)
     {
-        ___RADIUS = 8f;
+        ___RADIUS = 7f;
     }
 }

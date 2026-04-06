@@ -52,3 +52,5 @@ Use the game's source code (`./decompiled`) to guide your patches.
 Before implementing a patch, consult relevant articles in the Harmony documentation (`./docs/harmony`).
 
 After implementing a patch, you should compile the application to verify its correctness.
+
+Consider that patches should work for online mode, as well as offline mode.
