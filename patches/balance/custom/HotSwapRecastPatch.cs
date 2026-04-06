@@ -14,7 +14,14 @@ public static class HotSwapRecastPatch
         // Instead of teleporting immediately, we want to enable recast.
         if (__instance.state == HotSwapObject.HotSwapState.Projectile)
         {
-            __instance.localCollision(null);
+            if (Globals.online && __instance.photonView != null && __instance.photonView.isMine && PhotonNetwork.connected)
+            {
+                __instance.photonView.RPC("rpcCollision", PhotonTargets.All, new object[] { -1 });
+            }
+            else
+            {
+                __instance.localCollision(null);
+            }
             return false; // Skip original Teleport
         }
         return true;
