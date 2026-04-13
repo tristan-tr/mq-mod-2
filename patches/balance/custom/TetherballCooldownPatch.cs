@@ -22,7 +22,9 @@ namespace mq_mod_2.patches.balance.custom
                 }
 
                 Identity id = enemy.GetComponent<Identity>();
-                if (id != null && PlayerManager.players.TryGetValue(id.owner, out Player player))
+                WizardController wc = enemy.GetComponent<WizardController>();
+
+                if (wc != null && !wc.isClone && id != null && PlayerManager.players.TryGetValue(id.owner, out Player player))
                 {
                     foreach (Cooldown cd in player.cooldowns.Values)
                     {
