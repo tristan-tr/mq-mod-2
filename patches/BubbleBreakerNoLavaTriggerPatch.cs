@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Reflection.Emit;
 using HarmonyLib;
 
-namespace mq_mod_2.patches.balance.custom;
+namespace mq_mod_2.patches;
 
 [HarmonyPatch(typeof(WizardStatus), nameof(WizardStatus.rpcApplyDamage))]
 public class BubbleBreakerNoLavaTriggerPatch

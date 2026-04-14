@@ -1,11 +1,11 @@
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection.Emit;
 using DG.Tweening;
 using HarmonyLib;
+using mq_mod_2.patches.utils;
 using UnityEngine;
 
-namespace mq_mod_2.patches.balance.custom;
+namespace mq_mod_2.patches;
 
 /**
  * Makes your wizard transparent to yourself, and invisible to everyone else when playing online mode and hitting chameleon.
@@ -14,32 +14,11 @@ namespace mq_mod_2.patches.balance.custom;
 [HarmonyPatch]
 public class ChameleonInvisibilityPatch
 {
-    // should not be true for clones since default chameleon behaviour does not turn clones invis
-    static bool IsLocalPlayer(WizardStatus wizardStatus)
-    {
-        int localOwner = wizardStatus.GetComponent<Identity>().localOwner;
-        int? only_local_player_id = BattleManager.only_local_player_id;
-
-        if (only_local_player_id.HasValue && localOwner == only_local_player_id.Value)
-        {
-            // this wizardstatus belongs to the localplayer
-            
-            // exclude clones
-            var wc = wizardStatus.GetComponent<WizardController>();
-            if (wc != null && !wc.isClone)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<Material, Shader> _originalShaders = new();
 
     public static void CustomHideWizard(WizardStatus instance, bool hide)
     {
-        if (Globals.online && IsLocalPlayer(instance))
+        if (Globals.online && PatchUtils.IsLocalPlayer(instance))
         {
             Renderer[] array = instance.materialColors.Keys.ToArray();
             foreach (var renderer in array)
@@ -104,7 +83,7 @@ public class ChameleonInvisibilityPatch
 
     public static void CustomHideStatusBar(WizardStatus instance, bool hide)
     {
-        if (Globals.online && IsLocalPlayer(instance) && hide)
+        if (Globals.online && PatchUtils.IsLocalPlayer(instance) && hide)
         {
             return; // skip hiding
         }
@@ -133,20 +112,9 @@ public class ChameleonInvisibilityPatch
         var hideStatusBarMethod = AccessTools.Method(typeof(WizardStatus), nameof(WizardStatus.HideStatusBar));
         var customHideStatusBarMethod = AccessTools.Method(typeof(ChameleonInvisibilityPatch), nameof(CustomHideStatusBar));
 
-        foreach (var instruction in instructions)
-        {
-            if (instruction.Calls(hideWizardMethod))
-            {
-                yield return new CodeInstruction(OpCodes.Call, customHideWizardMethod);
-            }
-            else if (instruction.Calls(hideStatusBarMethod))
-            {
-                yield return new CodeInstruction(OpCodes.Call, customHideStatusBarMethod);
-            }
-            else
-            {
-                yield return instruction;
-            }
-        }
+        return PatchUtils.ReplaceMethodCall(
+            PatchUtils.ReplaceMethodCall(instructions, hideWizardMethod, customHideWizardMethod),
+            hideStatusBarMethod, customHideStatusBarMethod
+        );
     }
 }

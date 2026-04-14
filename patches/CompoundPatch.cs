@@ -1,10 +1,8 @@
-using System;
 using System.Collections.Generic;
 using System.Reflection.Emit;
 using HarmonyLib;
-using UnityEngine;
 
-namespace mq_mod_2.patches.balance.statchange;
+namespace mq_mod_2.patches;
 
 [HarmonyPatch]
 public static class CompoundPatch

@@ -1,8 +1,7 @@
 using HarmonyLib;
 using System.Collections.Generic;
-using UnityEngine;
 
-namespace mq_mod_2.patches.balance.custom;
+namespace mq_mod_2.patches;
 
 [HarmonyPatch(typeof(SpellHandler), nameof(SpellHandler.RefreshPrimary))]
 public static class FlashFloodNerfPatch

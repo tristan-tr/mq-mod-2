@@ -42,8 +42,4 @@
     <None Remove="decompiled\**" />
     <None Remove="docs\**" />
   </ItemGroup>
-  
-  <ItemGroup>
-    <Folder Include="patches\balance\" />
-  </ItemGroup>
 </Project>

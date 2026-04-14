@@ -3,6 +3,8 @@ using UnityEngine;
 
 // ai slop
 
+namespace mq_mod_2.patches;
+
 [HarmonyPatch(typeof(HotSwapObject))]
 public static class HotSwapRecastPatch
 {

@@ -1,6 +1,6 @@
 ﻿using HarmonyLib;
 
-namespace mq_mod_2.patches.balance.statchange;
+namespace mq_mod_2.patches;
 
 [HarmonyPatch(typeof(GlaiveObject), nameof(GlaiveObject.Init))]
 public class GlaivePatch
