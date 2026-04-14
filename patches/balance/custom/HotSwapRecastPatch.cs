@@ -7,7 +7,7 @@ using UnityEngine;
 public static class HotSwapRecastPatch
 {
     [HarmonyPrefix]
-    [HarmonyPatch("Teleport")]
+    [HarmonyPatch(nameof(HotSwapObject.Teleport))]
     public static bool TeleportPrefix(HotSwapObject __instance)
     {
         // If we are still a projectile, it means we just hit the ground.
@@ -28,7 +28,7 @@ public static class HotSwapRecastPatch
     }
 
     [HarmonyPostfix]
-    [HarmonyPatch("localCollision")]
+    [HarmonyPatch(nameof(HotSwapObject.localCollision))]
     public static void LocalCollisionPostfix(HotSwapObject __instance, GameObject go, PhysicsBody ___phys)
     {
         // Ensure state and isKinematic are set even if go is null (ground hit)
@@ -69,7 +69,7 @@ public static class HotSwapRecastPatch
     }
 
     [HarmonyPrefix]
-    [HarmonyPatch("Swap")]
+    [HarmonyPatch(nameof(HotSwapObject.Swap))]
     public static bool SwapPrefix(HotSwapObject __instance, float force, Transform ___target, UnitStatus ___enemyStatus)
     {
         // If we recast and there's no target, we perform the teleport.

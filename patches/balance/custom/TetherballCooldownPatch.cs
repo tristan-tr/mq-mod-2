@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace mq_mod_2.patches.balance.custom
 {
-    [HarmonyPatch(typeof(TetherballObject), "localImpact")]
+    [HarmonyPatch(typeof(TetherballObject), nameof(TetherballObject.localImpact))]
     public static class TetherballCooldownPatch
     {
         public static void Postfix(GameObject[] enemies)

@@ -55,9 +55,12 @@ After implementing a patch, you should compile the application to verify its cor
 
 Consider that patches should work for online mode, as well as offline mode.
 
-# Harmony tricks
+## Harmony usage
 
 Avoid using Traverse if possible:
 - Each patch method (except a transpiler) can get all the arguments of the original method as well as the instance if the original method is not static and the return value.
 - You only need to define the parameters you want to access.  
 - See `docs/harmony/patching-injections.md` for details.
+
+Always use nameof in the HarmonyPatch header if the method is not private.
+- e.g. `[HarmonyPatch(typeof(PlayerManager), nameof(PlayerManager.DetermineBots))]` instead of `[HarmonyPatch(typeof(PlayerManager), "DetermineBots")]`

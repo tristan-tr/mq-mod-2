@@ -4,7 +4,7 @@ using HarmonyLib;
 
 namespace mq_mod_2.patches.balance.custom;
 
-[HarmonyPatch(typeof(WizardStatus), "rpcApplyDamage")]
+[HarmonyPatch(typeof(WizardStatus), nameof(WizardStatus.rpcApplyDamage))]
 public class BubbleBreakerNoLavaTriggerPatch
 {
     static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)

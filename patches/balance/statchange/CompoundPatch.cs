@@ -9,7 +9,7 @@ namespace mq_mod_2.patches.balance.statchange;
 [HarmonyPatch]
 public static class CompoundPatch
 {
-    [HarmonyPatch(typeof(CompoundObject), "Init")]
+    [HarmonyPatch(typeof(CompoundObject), nameof(CompoundObject.Init))]
     [HarmonyTranspiler]
     public static IEnumerable<CodeInstruction> CompoundObjectInitTranspiler(IEnumerable<CodeInstruction> instructions)
     {

@@ -111,7 +111,7 @@ public class ChameleonInvisibilityPatch
         instance.HideStatusBar(hide);
     }
 
-    [HarmonyPatch(typeof(ChameleonObject), "rpcCopy")]
+    [HarmonyPatch(typeof(ChameleonObject), nameof(ChameleonObject.rpcCopy))]
     [HarmonyTranspiler]
     static IEnumerable<CodeInstruction> TranspileRpcCopy(IEnumerable<CodeInstruction> instructions)
     {

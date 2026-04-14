@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace mq_mod_2.patches.balance.custom;
 
-[HarmonyPatch(typeof(SpellHandler), "RefreshPrimary")]
+[HarmonyPatch(typeof(SpellHandler), nameof(SpellHandler.RefreshPrimary))]
 public static class FlashFloodNerfPatch
 {
     [HarmonyPrefix]

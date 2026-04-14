@@ -6,7 +6,7 @@ namespace mq_mod_2.patches.balance.custom;
 
 // ai slop, sorry
 
-[HarmonyPatch(typeof(RocketObject), "rpcCollision")]
+[HarmonyPatch(typeof(RocketObject), nameof(RocketObject.rpcCollision))]
 public class RocketDividePatch
 {
     private static readonly AccessTools.FieldRef<RocketObject, List<GameObject>> AlreadyHitRef =

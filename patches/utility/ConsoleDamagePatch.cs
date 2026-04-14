@@ -20,7 +20,7 @@ public class ConsoleDamagePatch
             typeof(CrystalStatus)
         };
         return types
-            .Select(t => AccessTools.Method(t, "rpcApplyDamage", new Type[] { typeof(float), typeof(int), typeof(int) }))
+            .Select(t => AccessTools.Method(t, nameof(WizardStatus.rpcApplyDamage), new Type[] { typeof(float), typeof(int), typeof(int) }))
             .Where(m => m != null);
     }
 

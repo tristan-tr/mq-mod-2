@@ -4,7 +4,7 @@ using HarmonyLib;
 
 namespace mq_mod_2.patches.balance.statchange;
 
-[HarmonyPatch(typeof(VanguardObject), "rpcCollision")]
+[HarmonyPatch(typeof(VanguardObject), nameof(VanguardObject.rpcCollision))]
 public static class VanguardPatch
 {
     public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
