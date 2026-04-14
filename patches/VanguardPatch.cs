@@ -10,6 +10,6 @@ public static class VanguardPatch
     public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
     {
         // absorb up to 100 damage instead of 60
-        return TranspilerUtils.ReplaceConstant(instructions, 60f, 100f);
+        return instructions.ReplaceConstant(60f, 100f);
     }
 }

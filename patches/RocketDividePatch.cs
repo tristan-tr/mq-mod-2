@@ -14,7 +14,7 @@ public class RocketDividePatch
     static void Postfix(RocketObject __instance, List<GameObject> ___alreadyHit)
     {
         // Use the game's IsMine extension to check if we should spawn more rockets
-        if (PatchUtils.IsMine(__instance.photonView))
+        if (__instance.photonView.IsMine())
         {
             SpawnRocket(__instance, ___alreadyHit, 45f);
             SpawnRocket(__instance, ___alreadyHit, -45f);

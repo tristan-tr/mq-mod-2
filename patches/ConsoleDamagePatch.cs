@@ -34,11 +34,11 @@ public class ConsoleDamagePatch
             if (__instance is MonoBehaviour mb)
             {
                 var identity = mb.GetComponent<Identity>();
-                victimName = identity != null ? PatchUtils.GetPlayerName(identity.owner) : mb.gameObject.name;
+                victimName = identity != null ? IdUtils.GetPlayerName(identity.owner) : mb.gameObject.name;
             }
 
-            string attackerName = PatchUtils.GetPlayerName(owner);
-            string spellNameStr = PatchUtils.GetSpellName(source);
+            string attackerName = IdUtils.GetPlayerName(owner);
+            string spellNameStr = IdUtils.GetSpellName(source);
 
             Plugin.Logger.LogInfo($"[Damage] {attackerName} dealt {damage:F1} damage to {victimName} via {spellNameStr}");
         }

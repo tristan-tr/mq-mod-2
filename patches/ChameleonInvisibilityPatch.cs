@@ -18,7 +18,7 @@ public class ChameleonInvisibilityPatch
 
     public static void CustomHideWizard(WizardStatus instance, bool hide)
     {
-        if (Globals.online && PatchUtils.IsLocalPlayer(instance))
+        if (Globals.online && instance.IsLocalPlayer())
         {
             Renderer[] array = instance.materialColors.Keys.ToArray();
             foreach (var renderer in array)
@@ -83,7 +83,7 @@ public class ChameleonInvisibilityPatch
 
     public static void CustomHideStatusBar(WizardStatus instance, bool hide)
     {
-        if (Globals.online && PatchUtils.IsLocalPlayer(instance) && hide)
+        if (Globals.online && instance.IsLocalPlayer() && hide)
         {
             return; // skip hiding
         }
@@ -112,9 +112,8 @@ public class ChameleonInvisibilityPatch
         var hideStatusBarMethod = AccessTools.Method(typeof(WizardStatus), nameof(WizardStatus.HideStatusBar));
         var customHideStatusBarMethod = AccessTools.Method(typeof(ChameleonInvisibilityPatch), nameof(CustomHideStatusBar));
 
-        return TranspilerUtils.ReplaceMethodCall(
-            TranspilerUtils.ReplaceMethodCall(instructions, hideWizardMethod, customHideWizardMethod),
-            hideStatusBarMethod, customHideStatusBarMethod
-        );
+        return instructions
+            .ReplaceMethodCall(hideWizardMethod, customHideWizardMethod)
+            .ReplaceMethodCall(hideStatusBarMethod, customHideStatusBarMethod);
     }
 }

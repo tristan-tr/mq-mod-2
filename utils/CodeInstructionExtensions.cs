@@ -5,12 +5,12 @@ using HarmonyLib;
 
 namespace mq_mod_2.utils;
 
-public static class TranspilerUtils
+public static class CodeInstructionExtensions
 {
     /// <summary>
     /// Transpiler helper to replace all calls of one method with another.
     /// </summary>
-    public static IEnumerable<CodeInstruction> ReplaceMethodCall(IEnumerable<CodeInstruction> instructions, MethodInfo oldMethod, MethodInfo newMethod)
+    public static IEnumerable<CodeInstruction> ReplaceMethodCall(this IEnumerable<CodeInstruction> instructions, MethodInfo oldMethod, MethodInfo newMethod)
     {
         foreach (var instruction in instructions)
         {
@@ -28,7 +28,7 @@ public static class TranspilerUtils
     /// <summary>
     /// A helper for transpilers that uses CodeMatcher to replace all occurrences of a constant.
     /// </summary>
-    public static IEnumerable<CodeInstruction> ReplaceConstant(IEnumerable<CodeInstruction> instructions, float oldVal, float newVal)
+    public static IEnumerable<CodeInstruction> ReplaceConstant(this IEnumerable<CodeInstruction> instructions, float oldVal, float newVal)
     {
         return new CodeMatcher(instructions)
             .MatchForward(false, new CodeMatch(i => i.LoadsConstant(oldVal)))
@@ -39,7 +39,7 @@ public static class TranspilerUtils
     /// <summary>
     /// A helper for transpilers that uses CodeMatcher to replace all occurrences of a constant.
     /// </summary>
-    public static IEnumerable<CodeInstruction> ReplaceConstant(IEnumerable<CodeInstruction> instructions, int oldVal, int newVal)
+    public static IEnumerable<CodeInstruction> ReplaceConstant(this IEnumerable<CodeInstruction> instructions, int oldVal, int newVal)
     {
         return new CodeMatcher(instructions)
             .MatchForward(false, new CodeMatch(i => i.LoadsConstant(oldVal)))
