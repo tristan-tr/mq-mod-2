@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using DG.Tweening;
 using HarmonyLib;
-using mq_mod_2.patches.utils;
+using mq_mod_2.utils;
 using UnityEngine;
 
 namespace mq_mod_2.patches;
@@ -112,8 +112,8 @@ public class ChameleonInvisibilityPatch
         var hideStatusBarMethod = AccessTools.Method(typeof(WizardStatus), nameof(WizardStatus.HideStatusBar));
         var customHideStatusBarMethod = AccessTools.Method(typeof(ChameleonInvisibilityPatch), nameof(CustomHideStatusBar));
 
-        return PatchUtils.ReplaceMethodCall(
-            PatchUtils.ReplaceMethodCall(instructions, hideWizardMethod, customHideWizardMethod),
+        return TranspilerUtils.ReplaceMethodCall(
+            TranspilerUtils.ReplaceMethodCall(instructions, hideWizardMethod, customHideWizardMethod),
             hideStatusBarMethod, customHideStatusBarMethod
         );
     }

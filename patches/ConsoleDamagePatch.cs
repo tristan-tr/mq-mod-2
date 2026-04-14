@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using HarmonyLib;
-using mq_mod_2.patches.utils;
+using mq_mod_2.utils;
 using UnityEngine;
 
 namespace mq_mod_2.patches;
