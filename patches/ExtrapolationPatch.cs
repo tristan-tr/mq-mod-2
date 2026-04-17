@@ -14,9 +14,8 @@ public static class ExtrapolationPatch
 {
     private class SyncState
     {
-        public double lastSentTimestamp;
         public Vector3 lastReceivedPos;
-        public Vector3 velocityPerFrame;
+        public Vector3 receivedVelocity;
     }
 
     private static readonly ConditionalWeakTable<NetworkedWizard, SyncState> states = new();
@@ -48,23 +47,25 @@ public static class ExtrapolationPatch
                 states.Add(__instance, state);
             }
 
-            // Using local variable to avoid Harmony003 warning
-            double packetTimestamp = info.timestamp;
-            state.lastSentTimestamp = packetTimestamp;
+            // Capture the state immediately after the original OnPhotonSerializeView has run
             state.lastReceivedPos = correctPlayerPosRef(__instance);
-            state.velocityPerFrame = physRef(__instance).velocity;
+            
+            var physics = physRef(__instance);
+            if (physics == null) return;
+            state.receivedVelocity = physics.velocity;
 
             // Extrapolate the "correct" position based on network lag.
-            // PhotonNetwork.time is the current synchronized time.
-            // info.timestamp is when the packet was sent.
+            // PhotonNetwork.time is the current synchronized server time.
+            // info.timestamp is the server time when the packet was sent.
+            double packetTimestamp = info.timestamp;
             double lag = PhotonNetwork.time - packetTimestamp;
             
-            // Limit lag to reasonable values (500ms max) to avoid wild jumps
-            if (lag > 0 && lag < 0.5)
+            // Limit lag to reasonable values (500ms max) to avoid wild jumps from jitter
+            if (lag > 0.0 && lag < 0.5)
             {
                 // In MageQuit, PhysicsBody.velocity x and z are units per second, 
-                // but y is units per frame.
-                Vector3 velocityPerSecond = state.velocityPerFrame;
+                // but y is units per frame (gravity is added directly every frame).
+                Vector3 velocityPerSecond = state.receivedVelocity;
                 velocityPerSecond.y /= Time.fixedDeltaTime;
                 Vector3 extrapolation = velocityPerSecond * (float)lag;
                 
@@ -72,7 +73,9 @@ public static class ExtrapolationPatch
                 Vector3 newCorrectPos = state.lastReceivedPos + extrapolation;
                 correctPlayerPosRef(__instance) = newCorrectPos;
                 
-                // Recalculate internal NetworkedWizard flags so Update() uses the new position correctly
+                // Recalculate internal NetworkedWizard flags so Update() uses the new position correctly.
+                // This ensures that either the lerp in Update() or the dead reckoning in FixedUpdate()
+                // uses the lag-compensated position.
                 Vector3 newDelta = newCorrectPos - __instance.transform.position;
                 deltaPositionRef(__instance) = newDelta;
                 
