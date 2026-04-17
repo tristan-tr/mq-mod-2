@@ -62,8 +62,10 @@ public static class ExtrapolationPatch
             // Limit lag to reasonable values (500ms max) to avoid wild jumps
             if (lag > 0 && lag < 0.5)
             {
-                // phys.velocity is meters per frame (at 50fps / 0.02s fixed delta time)
-                Vector3 velocityPerSecond = state.velocityPerFrame / Time.fixedDeltaTime;
+                // In MageQuit, PhysicsBody.velocity x and z are units per second, 
+                // but y is units per frame.
+                Vector3 velocityPerSecond = state.velocityPerFrame;
+                velocityPerSecond.y /= Time.fixedDeltaTime;
                 Vector3 extrapolation = velocityPerSecond * (float)lag;
                 
                 // Update the target position
