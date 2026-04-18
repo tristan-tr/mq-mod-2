@@ -12,7 +12,7 @@ public static class RocketStatsPatch
     [HarmonyPostfix]
     public static void SpellManagerAwakePostfix(SpellManager __instance)
     {
-        if (__instance.spell_table.TryGetValue(SpellName.Rocket, out Spell rocket))
+        if (__instance.spell_table != null && __instance.spell_table.TryGetValue(SpellName.Rocket, out Spell rocket))
         {
             rocket.cooldown = 4f;
         }

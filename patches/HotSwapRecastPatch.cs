@@ -13,7 +13,7 @@ public static class HotSwapRecastPatch
     [HarmonyPostfix]
     public static void SpellManagerAwakePostfix(SpellManager __instance)
     {
-        if (__instance.spell_table.TryGetValue(SpellName.HotSwap, out var hotswap))
+        if (__instance.spell_table != null && __instance.spell_table.TryGetValue(SpellName.HotSwap, out var hotswap))
         {
             // Add Custom and Attack flags so AI considers it for recasting
             hotswap.uses |= SpellUses.Custom | SpellUses.Attack;
