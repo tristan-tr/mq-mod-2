@@ -64,3 +64,13 @@ Avoid using Traverse if possible:
 
 Always use nameof in the HarmonyPatch header if the method is not private.
 - e.g. `[HarmonyPatch(typeof(PlayerManager), nameof(PlayerManager.DetermineBots))]` instead of `[HarmonyPatch(typeof(PlayerManager), "DetermineBots")]`
+
+# Lessons Learned
+
+## Networking
+- **RPCs:** When modifying behavior that must be synchronized, use `photonView.RPC`. Always check if `PhotonNetwork.connected` and `photonView.isMine` before sending.
+
+## Game Patterns
+- **Damage Sources:** The game uses `int source` in damage methods. Values >= 0 usually correspond to the `SpellName` enum. Negative values represent environmental damage (e.g., Lava is `-4`).
+- **Identity:** Most networked objects have an `Identity` component which tracks the `owner` (player ID) and `localOwner`.
+- **Clones:** Always check `WizardController.isClone` when your logic should only apply to the "real" wizard and not illusions.
