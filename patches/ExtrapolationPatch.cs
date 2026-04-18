@@ -63,19 +63,53 @@ public static class ExtrapolationPatch
             // Limit lag to reasonable values (500ms max) to avoid wild jumps from jitter
             if (lag > 0.0 && lag < 0.5)
             {
-                // In MageQuit, PhysicsBody.velocity x and z are units per second, 
-                // but y is units per frame (gravity is added directly every frame).
-                Vector3 velocityPerSecond = state.receivedVelocity;
-                velocityPerSecond.y /= Time.fixedDeltaTime;
-                Vector3 extrapolation = velocityPerSecond * (float)lag;
+                // To factor in acceleration (gravity and friction), we simulate the physics steps.
+                // MageQuit uses a fixed time step for physics.
+                float fixedDt = Time.fixedDeltaTime;
+                Vector3 simPos = state.lastReceivedPos;
+                Vector3 simVel = state.receivedVelocity;
+                bool onGround = physics.onGround;
                 
-                // Update the target position
-                Vector3 newCorrectPos = state.lastReceivedPos + extrapolation;
+                // Get physics constants
+                float gravity = physics.gravity;
+                float friction = onGround ? physics.groundFriction : physics.airFriction;
+
+                float remainingLag = (float)lag;
+                while (remainingLag >= fixedDt)
+                {
+                    // 1. Apply Gravity (Vertical)
+                    simVel.y += gravity;
+                    
+                    // 2. Apply Friction (Horizontal)
+                    simVel.x *= friction;
+                    simVel.z *= friction;
+                    
+                    // 3. Update Position
+                    // Vertical is units per frame in PhysicsBody.FixedUpdate logic, but we treat it as velocity here.
+                    // Actually, PhysicsBody does: 
+                    // vector4 = velocity; vector4.x *= fixedDt; vector4.z *= fixedDt; pos += vector4;
+                    // This means Y displacement IS the y velocity value, and XZ displacement is velocity * dt.
+                    simPos.x += simVel.x * fixedDt;
+                    simPos.z += simVel.z * fixedDt;
+                    simPos.y += simVel.y; // Y is per-frame
+
+                    if (onGround && simVel.y < 0f) simVel.y = 0f;
+
+                    remainingLag -= fixedDt;
+                }
+                
+                // Final partial step
+                if (remainingLag > 0)
+                {
+                    simPos.x += simVel.x * remainingLag;
+                    simPos.z += simVel.z * remainingLag;
+                    simPos.y += simVel.y * (remainingLag / fixedDt);
+                }
+
+                Vector3 newCorrectPos = simPos;
                 correctPlayerPosRef(__instance) = newCorrectPos;
                 
                 // Recalculate internal NetworkedWizard flags so Update() uses the new position correctly.
-                // This ensures that either the lerp in Update() or the dead reckoning in FixedUpdate()
-                // uses the lag-compensated position.
                 Vector3 newDelta = newCorrectPos - __instance.transform.position;
                 deltaPositionRef(__instance) = newDelta;
                 
