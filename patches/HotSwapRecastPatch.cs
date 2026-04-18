@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using HarmonyLib;
 using UnityEngine;
 
@@ -5,11 +6,56 @@ using UnityEngine;
 
 namespace mq_mod_2.patches;
 
-[HarmonyPatch(typeof(HotSwapObject))]
+[HarmonyPatch]
 public static class HotSwapRecastPatch
 {
+    [HarmonyPatch(typeof(SpellManager), "Awake")]
+    [HarmonyPostfix]
+    public static void SpellManagerAwakePostfix(SpellManager __instance)
+    {
+        if (__instance.spell_table.TryGetValue(SpellName.HotSwap, out var hotswap))
+        {
+            // Add Custom and Attack flags so AI considers it for recasting
+            hotswap.uses |= SpellUses.Custom | SpellUses.Attack;
+        }
+    }
+
+    [HarmonyPatch(typeof(HotSwap), nameof(HotSwap.AvailableOverride))]
     [HarmonyPrefix]
-    [HarmonyPatch(nameof(HotSwapObject.Teleport))]
+    public static bool AvailableOverridePrefix(HotSwap __instance, AiController ai, int owner, SpellUses use, int reactivate, ref bool __result)
+    {
+        // Always allow recast if it's available
+        if (reactivate > 1)
+        {
+            __result = true;
+            return false;
+        }
+        return true;
+    }
+
+    [HarmonyPatch(typeof(HotSwap), nameof(HotSwap.GetAiAim))]
+    [HarmonyPrefix]
+    public static bool GetAiAimPrefix(HotSwap __instance, ref Vector3? __result, TargetComponent targetComponent, SpellUses use)
+    {
+        // For recasts, aim doesn't matter much as it teleports to the object, 
+        // but we need to return a non-null value so the AI decides to cast it.
+        if (__instance.reactivate > 1)
+        {
+            if (use == SpellUses.Custom)
+            {
+                __result = targetComponent.transform.forward;
+            }
+            else
+            {
+                __result = Vector3.forward;
+            }
+            return false;
+        }
+        return true;
+    }
+
+    [HarmonyPatch(typeof(HotSwapObject), nameof(HotSwapObject.Teleport))]
+    [HarmonyPrefix]
     public static bool TeleportPrefix(HotSwapObject __instance)
     {
         // If we are still a projectile, it means we just hit the ground.
@@ -29,8 +75,8 @@ public static class HotSwapRecastPatch
         return true;
     }
 
+    [HarmonyPatch(typeof(HotSwapObject), nameof(HotSwapObject.localCollision))]
     [HarmonyPostfix]
-    [HarmonyPatch(nameof(HotSwapObject.localCollision))]
     public static void LocalCollisionPostfix(HotSwapObject __instance, GameObject go, PhysicsBody ___phys)
     {
         // Ensure state and isKinematic are set even if go is null (ground hit)
@@ -42,8 +88,8 @@ public static class HotSwapRecastPatch
         }
     }
 
+    [HarmonyPatch(typeof(HotSwapObject), "FixedUpdate")]
     [HarmonyPrefix]
-    [HarmonyPatch("FixedUpdate")]
     public static void FixedUpdatePrefix(HotSwapObject __instance, out bool __state, Transform ___target, UnitStatus ___enemyStatus)
     {
         __state = false;
@@ -60,8 +106,8 @@ public static class HotSwapRecastPatch
         }
     }
 
+    [HarmonyPatch(typeof(HotSwapObject), "FixedUpdate")]
     [HarmonyPostfix]
-    [HarmonyPatch("FixedUpdate")]
     public static void FixedUpdatePostfix(HotSwapObject __instance, bool __state)
     {
         if (__state)
@@ -70,8 +116,8 @@ public static class HotSwapRecastPatch
         }
     }
 
+    [HarmonyPatch(typeof(HotSwapObject), nameof(HotSwapObject.Swap))]
     [HarmonyPrefix]
-    [HarmonyPatch(nameof(HotSwapObject.Swap))]
     public static bool SwapPrefix(HotSwapObject __instance, float force, Transform ___target, UnitStatus ___enemyStatus)
     {
         // If we recast and there's no target, we perform the teleport.
