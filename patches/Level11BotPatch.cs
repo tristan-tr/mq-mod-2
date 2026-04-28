@@ -73,3 +73,96 @@ public static class SpellComponent_RandomRate_Patch
         }
     }
 }
+
+[HarmonyPatch(typeof(Spell), nameof(Spell.GetPredictedPosition))]
+public static class Spell_GetPredictedPosition_Patch
+{
+    public static bool Prefix(Spell __instance, ref Vector3? __result, bool includeWindUp, Transform targetTransform, Vector3 casterPos, float additionalTime)
+    {
+        if (PlayerManager.gameSettings.botDifficulty != 11) return true;
+
+        if (targetTransform == null)
+        {
+            __result = null;
+            return false;
+        }
+
+        WizardController component = targetTransform.GetComponent<WizardController>();
+        if (!(component != null) || component.isClone)
+        {
+            __result = null;
+            return false;
+        }
+
+        PositionTracker component2 = targetTransform.GetComponent<PositionTracker>();
+        if (component2 == null)
+        {
+            __result = null;
+            return false;
+        }
+
+        Vector3 targetVelocity = component2.PredictedMovementVector();
+        float spellSpeed = Spell.sInitialVelocity;
+        
+        // If spell has no speed or target has no velocity, fallback to basic logic
+        if (spellSpeed == 0f)
+        {
+            float mag = (targetTransform.position - casterPos).magnitude;
+            float t_fallback = 0f;
+            if (includeWindUp) t_fallback += Spell.sWindUp;
+            t_fallback += additionalTime;
+            __result = new Vector3?(targetTransform.position + targetVelocity * t_fallback);
+            return false;
+        }
+
+        Vector3 targetPos = targetTransform.position;
+
+        // Advance target position by wind up and additional time first, as they happen before the spell even starts traveling
+        float preTravelTime = 0f;
+        if (includeWindUp) preTravelTime += Spell.sWindUp;
+        preTravelTime += additionalTime;
+        
+        Vector3 initialPos = targetPos + targetVelocity * preTravelTime;
+        Vector3 distanceVector = initialPos - casterPos;
+
+        // Quadratic equation coefficients
+        // (V_target^2 - V_spell^2) * t^2 + 2 * Dot(distanceVector, V_target) * t + distanceVector^2 = 0
+        float a = targetVelocity.sqrMagnitude - (spellSpeed * spellSpeed);
+        float b = 2f * Vector3.Dot(distanceVector, targetVelocity);
+        float c = distanceVector.sqrMagnitude;
+
+        float t = -1f;
+
+        if (Mathf.Abs(a) < 0.001f) // a is close to 0
+        {
+            if (Mathf.Abs(b) > 0.001f)
+            {
+                t = -c / b;
+            }
+        }
+        else
+        {
+            float discriminant = b * b - 4f * a * c;
+            if (discriminant >= 0f)
+            {
+                float sqrtDisc = Mathf.Sqrt(discriminant);
+                float t1 = (-b + sqrtDisc) / (2f * a);
+                float t2 = (-b - sqrtDisc) / (2f * a);
+
+                if (t1 > 0f && t2 > 0f) t = Mathf.Min(t1, t2);
+                else if (t1 > 0f) t = t1;
+                else if (t2 > 0f) t = t2;
+            }
+        }
+
+        if (t < 0f) 
+        {
+            // Fallback if no valid collision time (e.g. target running away faster than spell)
+            float mag = distanceVector.magnitude;
+            t = mag / spellSpeed;
+        }
+
+        __result = new Vector3?(initialPos + targetVelocity * t);
+        return false;
+    }
+}
