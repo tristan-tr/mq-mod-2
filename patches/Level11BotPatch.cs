@@ -54,12 +54,8 @@ public static class AiStats_SetAiStatsUsingDifficulty_Patch
             __instance.response = 0f;
             __instance.aggression = 1.5f;
             __instance.idle = 0f;
-            // TargetComponent uses `distance *= 1.1f - opportunism`. 
-            // If this is >= 1.1f, the distance becomes negative and breaks pathfinding targeting, 
-            // causing them to target the FURTHEST weak player.
-            // 1.09f makes the distance multiplier 0.01 (100x closer), prioritizing them heavily without breaking math.
-            __instance.opportunism = 1.09f;
-            __instance.focus = 1f;
+            __instance.opportunism = 1.0f;
+            __instance.focus = 0f;
             __instance.twitch = 1.5f;
             __instance.draftResponse = 1.0f;
         }
@@ -68,18 +64,6 @@ public static class AiStats_SetAiStatsUsingDifficulty_Patch
 
 [HarmonyPatch(typeof(SpellComponent), "RandomRate")]
 public static class SpellComponent_RandomRate_Patch
-{
-    public static void Postfix(ref float __result)
-    {
-        if (PlayerManager.gameSettings.botDifficulty == 11)
-        {
-            __result = Random.Range(0.01f, 0.05f);
-        }
-    }
-}
-
-[HarmonyPatch(typeof(TargetComponent), "RandomRate")]
-public static class TargetComponent_RandomRate_Patch
 {
     public static void Postfix(ref float __result)
     {
