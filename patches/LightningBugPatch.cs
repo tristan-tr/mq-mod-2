@@ -7,6 +7,6 @@ public class LightningBugPatch
 {
     static void Prefix(ref float velocity)
     {
-        velocity *= 1.5f;
+        velocity *= 1.2f;
     }
 }
