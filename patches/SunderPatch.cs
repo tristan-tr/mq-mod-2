@@ -14,7 +14,7 @@ public static class SunderPatch
         if (__instance.spell_table != null && __instance.spell_table.TryGetValue(SpellName.Sunder, out Spell sunder))
         {
             sunder.windUp = 0.7f;
-            sunder.windDown = 0.7f;
+            sunder.windDown = 0.5f;
             
             // Also update sub-spells if any (just in case)
             if (sunder.additionalCasts != null)
