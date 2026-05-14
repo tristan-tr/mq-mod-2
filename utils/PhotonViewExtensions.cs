@@ -10,4 +10,13 @@ public static class PhotonViewExtensions
     {
         return !Globals.online || photonView == null || photonView.isMine || (photonView.isSceneView && PhotonNetwork.isMasterClient);
     }
+
+    /// <summary>
+    /// Checks if a PhotonView is connected and belongs to a remote player.
+    /// Mimics the game's internal extension method.
+    /// </summary>
+    public static bool IsConnectedAndNotLocal(this PhotonView photonView)
+    {
+        return photonView != null && !photonView.isMine && PhotonNetwork.connected;
+    }
 }

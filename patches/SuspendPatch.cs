@@ -1,4 +1,6 @@
 using HarmonyLib;
+using UnityEngine;
+using System.Runtime.CompilerServices;
 
 namespace mq_mod_2.patches;
 
@@ -10,14 +12,7 @@ public static class SuspendPatch
     {
         if (spellName == SpellName.Suspend)
         {
-            cooldown -= 1f;
+            cooldown -= 2f;
         }
-    }
-
-    [HarmonyPatch(typeof(SuspendObject), MethodType.Constructor)]
-    [HarmonyPostfix]
-    public static void SuspendObjectConstructorPostfix(SuspendObject __instance)
-    {
-        AccessTools.Field(typeof(SpellObject), "POWER").SetValue(__instance, 25f);
     }
 }
