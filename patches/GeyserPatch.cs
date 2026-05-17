@@ -7,6 +7,6 @@ public class GeyserPatch
 {
     static void Prefix(ref float ___RADIUS)
     {
-        ___RADIUS = 7f;
+        ___RADIUS = 6f;
     }
 }

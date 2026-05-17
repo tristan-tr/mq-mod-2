@@ -27,7 +27,6 @@ public static class RelapseHitboxPatch
     [HarmonyPrefix]
     public static void RelapseObjectInitPrefix(ref float ___RADIUS)
     {
-        // Increase radius to match Geyser's modded radius (7.0)
-        ___RADIUS = 7f;
+        ___RADIUS = 6f;
     }
 }
