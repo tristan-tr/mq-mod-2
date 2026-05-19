@@ -6,6 +6,21 @@ namespace mq_mod_2.patches;
 [HarmonyPatch]
 public static class RelapseHitboxPatch
 {
+    [HarmonyPatch(typeof(SpellManager), nameof(SpellManager.Awake))]
+    [HarmonyPostfix]
+    public static void SpellManagerAwakePostfix(SpellManager __instance)
+    {
+        if (__instance.spell_table != null &&
+            __instance.spell_table.TryGetValue(SpellName.Relapse, out var relapse) &&
+            __instance.spell_table.TryGetValue(SpellName.Geyser, out var geyser))
+        {
+            relapse.animationName = geyser.animationName;
+            relapse.windUp = geyser.windUp;
+            relapse.windDown = geyser.windDown;
+            relapse.spellRadius = 5f;
+        }
+    }
+
     [HarmonyPatch(typeof(Relapse), nameof(Relapse.Initialize))]
     [HarmonyPrefix]
     public static bool RelapseInitializePrefix(Identity identity, Vector3 position, Quaternion rotation, float curve, int spellIndex, bool selfCast, SpellName spellNameForCooldown)
@@ -27,6 +42,6 @@ public static class RelapseHitboxPatch
     [HarmonyPrefix]
     public static void RelapseObjectInitPrefix(ref float ___RADIUS)
     {
-        ___RADIUS = 6f;
+        ___RADIUS = 5f;
     }
 }
