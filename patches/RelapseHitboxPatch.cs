@@ -6,7 +6,7 @@ namespace mq_mod_2.patches;
 [HarmonyPatch]
 public static class RelapseHitboxPatch
 {
-    [HarmonyPatch(typeof(SpellManager), nameof(SpellManager.Awake))]
+    [HarmonyPatch(typeof(SpellManager), "Awake")]
     [HarmonyPostfix]
     public static void SpellManagerAwakePostfix(SpellManager __instance)
     {
