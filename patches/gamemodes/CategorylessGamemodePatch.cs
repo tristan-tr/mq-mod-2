@@ -15,8 +15,8 @@ public static class CategorylessGamemodePatch
     static bool ChangeSpellSelectionModePrefix(SelectionMenu __instance, bool up)
     {
         SpellSelectionMode spellSelectionMode = PlayerManager.gameSettings.spellSelectionMode;
-        // Total 7 modes now (0 to 6)
-        spellSelectionMode = (SpellSelectionMode)(((int)spellSelectionMode + (up ? 1 : 6)) % 7);
+        // Total 8 modes now (0 to 7)
+        spellSelectionMode = (SpellSelectionMode)(((int)spellSelectionMode + (up ? 1 : 7)) % 8);
         PlayerManager.gameSettings.spellSelectionMode = spellSelectionMode;
         
         // Use reflection to call private methods
@@ -39,7 +39,18 @@ public static class CategorylessGamemodePatch
             {
                 Globals.online_lobby_canvas.uiCursor.UpdateActions(0);
             }
-            return false; // Skip original method to avoid exception
+            return false;
+        }
+        if (PlayerManager.gameSettings.spellSelectionMode == RandomCategoryOrderPatch.RandomCategoryOrder)
+        {
+            __instance.spellSelectionText.text = "Random Category Order";
+            __instance.descriptionText.text = "The order of draft categories is randomized each match. Spells are assigned to their correct slots.";
+            
+            if (__instance.online && Globals.online_lobby_canvas != null && Globals.online_lobby_canvas.uiCursor != null)
+            {
+                Globals.online_lobby_canvas.uiCursor.UpdateActions(0);
+            }
+            return false;
         }
         return true; // Run original for other modes
     }
