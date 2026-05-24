@@ -77,10 +77,63 @@ public static class RandomCategoryOrderPatch
         {
             // During draft, GetRound() returns the current draft round (0-6)
             int round = GameUtility.GetRound();
-            if (round >= 0 && round <= 6)
+            if (round >= 0 && round <= 6 && (int)button == round)
             {
                 button = (SpellButton)GetCategoryForRound(round);
             }
+        }
+    }
+
+    [HarmonyPatch(typeof(VideoSpellPlayer), nameof(VideoSpellPlayer.IsAllowedToDraftSpell))]
+    [HarmonyPrefix]
+    static bool IsAllowedToDraftSpellPrefix(VideoSpellPlayer __instance, int owner, ref bool __result)
+    {
+        if (PlayerManager.gameSettings.spellSelectionMode != RandomCategoryOrder) return true;
+
+        int currentOwner = (int)AccessTools.Field(typeof(VideoSpellPlayer), "currentOwner").GetValue(__instance);
+        if (PlayerManager.players.TryGetValue(currentOwner, out Player player))
+        {
+            int round = GameUtility.GetRound();
+            int category = GetCategoryForRound(round);
+            if (player.spell_library.ContainsKey((SpellButton)category))
+            {
+                object[] array = new object[6];
+                array[0] = "player ";
+                array[1] = currentOwner;
+                array[2] = " already has a spell for (";
+                array[3] = round;
+                array[4] = ") ";
+                array[5] = ((SpellButton)category).ToString();
+                NetworkLogger.Log(string.Concat(array));
+                __result = false;
+                return false;
+            }
+
+            if (PhotonNetwork.isMasterClient && PlayerDropIn.PlayerIsPendingRemoval(owner))
+            {
+                NetworkLogger.Log("player " + currentOwner + " has left so master is drafting for them");
+                __result = true;
+                return false;
+            }
+        }
+        __result = true;
+        return false;
+    }
+
+    [HarmonyPatch(typeof(RecapCard), nameof(RecapCard.ShowLearnedSpell))]
+    [HarmonyPostfix]
+    static void ShowLearnedSpellPostfix(RecapCard __instance)
+    {
+        if (PlayerManager.gameSettings.spellSelectionMode != RandomCategoryOrder) return;
+        int round = GameUtility.GetRound();
+        int category = GetCategoryForRound(round);
+        if (category == round) return;
+
+        Player player = (Player)AccessTools.Field(typeof(RecapCard), "player").GetValue(__instance);
+        if (player.spell_library.TryGetValue((SpellButton)category, out SpellName spellName))
+        {
+            Image learnedSpell = (Image)AccessTools.Field(typeof(RecapCard), "learnedSpell").GetValue(__instance);
+            learnedSpell.sprite = Globals.spell_manager.spell_table[spellName].icon;
         }
     }
 
