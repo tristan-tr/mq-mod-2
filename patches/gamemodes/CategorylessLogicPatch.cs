@@ -72,7 +72,7 @@ public static class CategorylessLogicPatch
 
     [HarmonyPatch(typeof(SpellManager), nameof(SpellManager.GetDraftTargetSpellIndex))]
     [HarmonyPrefix]
-    static bool GetDraftTargetSpellIndexPrefix(SpellManager __instance, int[] spellCounts, int currentPlayerNumber, ref int __result)
+    static bool GetDraftTargetSpellIndexPrefix(SpellManager __instance, int[] spellCounts, int currentPlayerNumber, ref int __result, int[] ___ai_draft_weights)
     {
         if (PlayerManager.gameSettings.spellSelectionMode != CategorylessGamemodePatch.Categoryless) return true;
 
@@ -102,8 +102,7 @@ public static class CategorylessLogicPatch
                     // Access private field ai_draft_weights via reflection for safety, 
                     // though it's likely accessible if we are in the same assembly or using public.
                     // Based on decompiled code it's private.
-                    int[] weights = (int[])AccessTools.Field(typeof(SpellManager), "ai_draft_weights").GetValue(__instance);
-                    num += weights[Math.Min(weightIndex, weights.Length - 1)];
+                    num += ___ai_draft_weights[Math.Min(weightIndex, ___ai_draft_weights.Length - 1)];
 
                     if (mappedElement == Element.Ice)
                     {

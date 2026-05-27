@@ -86,12 +86,11 @@ public static class RandomCategoryOrderPatch
 
     [HarmonyPatch(typeof(VideoSpellPlayer), nameof(VideoSpellPlayer.IsAllowedToDraftSpell))]
     [HarmonyPrefix]
-    static bool IsAllowedToDraftSpellPrefix(VideoSpellPlayer __instance, int owner, ref bool __result)
+    static bool IsAllowedToDraftSpellPrefix(VideoSpellPlayer __instance, int owner, ref bool __result, int ___currentOwner)
     {
         if (PlayerManager.gameSettings.spellSelectionMode != RandomCategoryOrder) return true;
 
-        int currentOwner = (int)AccessTools.Field(typeof(VideoSpellPlayer), "currentOwner").GetValue(__instance);
-        if (PlayerManager.players.TryGetValue(currentOwner, out Player player))
+        if (PlayerManager.players.TryGetValue(___currentOwner, out Player player))
         {
             int round = GameUtility.GetRound();
             int category = GetCategoryForRound(round);
@@ -99,7 +98,7 @@ public static class RandomCategoryOrderPatch
             {
                 object[] array = new object[6];
                 array[0] = "player ";
-                array[1] = currentOwner;
+                array[1] = ___currentOwner;
                 array[2] = " already has a spell for (";
                 array[3] = round;
                 array[4] = ") ";
@@ -111,7 +110,7 @@ public static class RandomCategoryOrderPatch
 
             if (PhotonNetwork.isMasterClient && PlayerDropIn.PlayerIsPendingRemoval(owner))
             {
-                NetworkLogger.Log("player " + currentOwner + " has left so master is drafting for them");
+                NetworkLogger.Log("player " + ___currentOwner + " has left so master is drafting for them");
                 __result = true;
                 return false;
             }
@@ -122,18 +121,16 @@ public static class RandomCategoryOrderPatch
 
     [HarmonyPatch(typeof(RecapCard), nameof(RecapCard.ShowLearnedSpell))]
     [HarmonyPostfix]
-    static void ShowLearnedSpellPostfix(RecapCard __instance)
+    static void ShowLearnedSpellPostfix(RecapCard __instance, Player ___player, Image ___learnedSpell)
     {
         if (PlayerManager.gameSettings.spellSelectionMode != RandomCategoryOrder) return;
         int round = GameUtility.GetRound();
         int category = GetCategoryForRound(round);
         if (category == round) return;
 
-        Player player = (Player)AccessTools.Field(typeof(RecapCard), "player").GetValue(__instance);
-        if (player.spell_library.TryGetValue((SpellButton)category, out SpellName spellName))
+        if (___player.spell_library.TryGetValue((SpellButton)category, out SpellName spellName))
         {
-            Image learnedSpell = (Image)AccessTools.Field(typeof(RecapCard), "learnedSpell").GetValue(__instance);
-            learnedSpell.sprite = Globals.spell_manager.spell_table[spellName].icon;
+            ___learnedSpell.sprite = Globals.spell_manager.spell_table[spellName].icon;
         }
     }
 
@@ -196,17 +193,16 @@ public static class RandomCategoryOrderPatch
 
     [HarmonyPatch(typeof(VideoSpellPlayer), nameof(VideoSpellPlayer.SlideIn))]
     [HarmonyPostfix]
-    static void SlideInPostfix(VideoSpellPlayer __instance)
+    static void SlideInPostfix(VideoSpellPlayer __instance, string[] ___buttonNames)
     {
         if (PlayerManager.gameSettings.spellSelectionMode != RandomCategoryOrder) return;
         int category = GetCategoryForRound(GameUtility.GetRound());
-        var buttonNames = (string[])AccessTools.Field(typeof(VideoSpellPlayer), "buttonNames").GetValue(__instance);
-        __instance.buttonIcon.buttonName = buttonNames[category];
+        __instance.buttonIcon.buttonName = ___buttonNames[category];
     }
 
     [HarmonyPatch(typeof(SpellManager), nameof(SpellManager.GetDraftTargetSpellIndex))]
     [HarmonyPrefix]
-    static bool GetDraftTargetSpellIndexPrefix(SpellManager __instance, int[] spellCounts, int currentPlayerNumber, ref int __result)
+    static bool GetDraftTargetSpellIndexPrefix(SpellManager __instance, int[] spellCounts, int currentPlayerNumber, ref int __result, int[] ___ai_draft_weights)
     {
         if (PlayerManager.gameSettings.spellSelectionMode != RandomCategoryOrder) return true;
 
@@ -239,8 +235,7 @@ public static class RandomCategoryOrderPatch
                 
                 if (weightIndex == -1) weightIndex = 9; // Safety default
                 
-                int[] weights = (int[])AccessTools.Field(typeof(SpellManager), "ai_draft_weights").GetValue(__instance);
-                num += weights[Math.Min(Math.Max(0, weightIndex), weights.Length - 1)];
+                num += ___ai_draft_weights[Math.Min(Math.Max(0, weightIndex), ___ai_draft_weights.Length - 1)];
 
                 if (mappedElement == Element.Ice)
                 {
@@ -285,7 +280,7 @@ public static class RandomCategoryOrderPatch
 
     [HarmonyPatch(typeof(PlayerSelection), "ErrorCheck")]
     [HarmonyPostfix]
-    static void ErrorCheckPostfix(PlayerSelection __instance, ref bool __result)
+    static void ErrorCheckPostfix(PlayerSelection __instance, ref bool __result, Color ___errorColor)
     {
         if (__result) return;
         if (PlayerManager.gameSettings.spellSelectionMode == RandomCategoryOrder)
@@ -293,7 +288,7 @@ public static class RandomCategoryOrderPatch
             if (PlayerManager.gameSettings.elements.Take(GamePreferences.current.prefs.LastUnlockedIndex + 5).Count(x => x != ElementInclusionMode.Banned) < 4)
             {
                 __instance.errorText.text = "Too many elements banned for that spell selection mode.";
-                __instance.errorText.color = (Color)AccessTools.Field(typeof(PlayerSelection), "errorColor").GetValue(__instance);
+                __instance.errorText.color = ___errorColor;
                 __result = true;
             }
         }
